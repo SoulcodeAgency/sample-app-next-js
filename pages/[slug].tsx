@@ -10,6 +10,7 @@ import { ValidCollectionCodename } from "../lib/types/perCollection";
 import { siteCodename } from "../lib/utils/env";
 import { createElementSmartLink, createFixedAddSmartLink } from "../lib/utils/smartLinkUtils";
 import { contentTypes, Metadata, Nav_NavigationItem, WSL_Page } from "../models";
+import { sanitizeCircularData } from "../lib/utils/circularityUtils";
 
 type Props = Readonly<{
   page: WSL_Page;
@@ -48,13 +49,15 @@ export const getStaticProps: GetStaticProps<Props, IParams> = async (context) =>
   const siteMenu = await getSiteMenu(!!context.preview);
   const defaultMetadata = await getDefaultMetadata(!!context.preview);
 
-  const page = await getItemBySlug<WSL_Page>(slug, contentTypes.page.codename, !!context.preview);
+  const data = await getItemBySlug<WSL_Page>(slug, contentTypes.page.codename, !!context.preview);
 
-  if (page === null) {
+  if (data === null) {
     return {
       notFound: true
     };
   }
+
+  const page = sanitizeCircularData(data);
 
   return {
     props: { page, siteCodename, siteMenu, defaultMetadata },

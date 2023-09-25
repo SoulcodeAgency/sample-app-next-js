@@ -10,6 +10,7 @@ import { ValidCollectionCodename } from '../lib/types/perCollection';
 import { useSmartLink } from '../lib/useSmartLink';
 import { siteCodename } from '../lib/utils/env';
 import { Nav_NavigationItem, WSL_WebSpotlightRoot } from '../models';
+import { sanitizeCircularData } from '../lib/utils/circularityUtils';
 
 type Props = Readonly<{
   homepage: WSL_WebSpotlightRoot;
@@ -52,7 +53,7 @@ const Home: NextPage<Props> = props => {
         {homepage.elements.content.linkedItems.map(item => (
           <Content
             key={item.system.id}
-            item={item as any}
+            item={item}
           />
         ))}
       </div>
@@ -61,12 +62,15 @@ const Home: NextPage<Props> = props => {
 };
 
 export const getStaticProps: GetStaticProps<Props> = async context => {
-  const homepage = await getHomepage(!!context.preview);
-  const siteMenu = await getSiteMenu(!!context.preview);
+  const homepageData = await getHomepage(!!context.preview);
+  const siteMenuData = await getSiteMenu(!!context.preview);
 
-  if (!homepage) {
+  if (!homepageData) {
     throw new Error("Can't find homepage item.");
   }
+
+  const homepage = sanitizeCircularData(homepageData);
+  const siteMenu = sanitizeCircularData(siteMenuData);
 
   return {
     props: { homepage, siteCodename, siteMenu, isPreview: !!context.preview },
